@@ -1821,7 +1821,22 @@ bool PDFDoc::markAnnotations(Object *annotsObj, XRef *xRef, XRef *countRef, unsi
           if (type.isName() && strcmp(type.getName(), "Annot") == 0) {
             const Object &obj2 = dict->lookupNF("P");
             if (obj2.isRef()) {
-              if (obj2.getRef().num == oldPageNum) {
+
+              bool notPageButAnnotsArray = false;
+              if (obj2.getRef().num != oldPageNum) {
+	            const Object tmpObj = getXRef()->fetch(obj2.getRef());
+                if(tmpObj.isDict()) {
+                  const Dict *tmpDict = tmpObj.getDict();
+                  if(tmpDict->getLength() > 0) {
+                    const char *key = tmpDict->getKey(0);
+                    if (strcmp(key, "Annots") == 0) { // if Ref is AnnotsArray
+                      notPageButAnnotsArray = true;
+                    }
+                  }
+                }
+              }
+            	
+              if ((obj2.getRef().num == oldPageNum) || (notPageButAnnotsArray == true)) {
                 const Object &obj3 = array->getNF(i);
                 if (obj3.isRef()) {
                   Ref r;
